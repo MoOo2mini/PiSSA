@@ -9,7 +9,9 @@ parser.add_argument('--adapter', type=str)
 parser.add_argument('--output_path', type=str)
 args = parser.parse_args()
 
-model = AutoModelForCausalLM.from_pretrained(args.base_model, torch_dtype=torch.bfloat16, trust_remote_code=True)
+model = AutoModelForCausalLM.from_pretrained(args.base_model, 
+                                             torch_dtype=torch.bfloat16, 
+                                             trust_remote_code=True)
 tokenizer = AutoTokenizer.from_pretrained(args.base_model)
 model = PeftModel.from_pretrained(model, args.adapter)
 model = model.merge_and_unload()

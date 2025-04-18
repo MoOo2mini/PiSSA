@@ -1,0 +1,5 @@
+[default]
+entity = minhee020-postech
+project = training-tracking
+base_url = https://api.wandb.ai
+

@@ -13,7 +13,7 @@ else
 fi
 
 # batch size = per_device_train_batch_size * gradient_accumulation_steps * num_gpus = 128
-deepspeed --master_port=16971 --include=localhost:0,1,2,3,4,5,6,7 train.py \
+deepspeed --master_port=16971 --include=localhost:4,5,6,7 train.py \
     --deepspeed configs/ds_config_zero2_no_offload.json \
     --model_name_or_path $RES_MODEL \
     --full_finetune False \
@@ -26,8 +26,8 @@ deepspeed --master_port=16971 --include=localhost:0,1,2,3,4,5,6,7 train.py \
     --output_dir $OUTPUT_PATH \
     --num_train_epochs 1 \
     --model_max_length 512 \
-    --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 4 \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 16 \
     --save_strategy "steps" \
     --save_steps 1000 \
     --save_total_limit 1 \

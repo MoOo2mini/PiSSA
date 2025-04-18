@@ -64,39 +64,17 @@ class SavePeftModelCallback(transformers.TrainerCallback):
         peft_model_path = os.path.join(checkpoint_folder, "adapter_model")
         kwargs["model"].save_pretrained(peft_model_path)
         kwargs["tokenizer"].save_pretrained(peft_model_path)
-        
 
     def on_save(self, args, state, control, **kwargs):
         self.save_model(args, state, kwargs)
-        
-        # Freeze 모델과 Adapter를 병합한 모델 저장
-        logger.info('Saving merged model (freeze + adapter)...')
-        merged_model_path = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{state.global_step}", "merged_model")
-        
-        # 병합된 모델 생성
-        merged_model = kwargs["model"].merge_and_unload()
-        
-        # 병합된 모델 저장
-        merged_model.save_pretrained(merged_model_path)
-        kwargs["tokenizer"].save_pretrained(merged_model_path)
-
-        # 병합된 모델 이후 다시 adapter를 활성화 (훈련을 계속하기 위해)
-        adapter_dir = os.path.join(args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{state.global_step}", "adapter_model")
-        kwargs["model"].load_adapter(adapter_dir,adapter_name="my_adapter")
-    
-    
         return control
 
     def on_train_end(self, args, state, control, **kwargs):
-        print("on_train_end 실행됨")
-        
         def touch(fname, times=None):
             with open(fname, 'a'):
                 os.utime(fname, times)
         touch(os.path.join(args.output_dir, 'completed'))
         self.save_model(args, state, kwargs)
-        adapter_path = os.path.join(args.output_dir, "final_adapter")
-        kwargs["model"].save_pretrained(adapter_path) 
 
 def get_last_checkpoint(checkpoint_dir):
     if os.path.isdir(checkpoint_dir):
@@ -314,7 +292,6 @@ def train():
     trainer.train(resume_from_checkpoint = resume_from_checkpoint_dir)
     trainer.save_state()
     if not script_args.full_finetune and script_args.merge:
-        # import pdb; pdb.set_trace()
         model = model.merge_and_unload()
         model.save_pretrained(script_args.output_dir)
         tokenizer.save_pretrained(script_args.output_dir)

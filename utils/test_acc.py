@@ -3,6 +3,9 @@ import json
 import re
 from fraction import Fraction
 from collections import defaultdict
+import os
+import shutil
+import wandb
 
 def remove_right_units(string):
     # "\\text{ " only ever occurs (at least in the val set) when describing units
@@ -247,6 +250,9 @@ def extract_commonsense_answer(dataset, sentence: str) -> float:
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--input_file', type=str, help="")
+parser.add_argument('--ckpt_step', type=int, required=False, default=None, help="For wandb logging")
+parser.add_argument('--wandb_project', type=str, default=None, help="Wandb project name")
+parser.add_argument('--wandb_runname', type=str, default=None, help="Wandb run name")
 args = parser.parse_args()
 
 results = defaultdict(list)
@@ -269,6 +275,18 @@ with open(args.input_file, 'r') as f:
             else:
                 results[data['type']].append(False)
         
+acc_dict = {}
 for key, value in results.items():
     acc = sum(value) / len(value)
+    acc_dict[key] = acc
     print(f'{key} length====', len(value), f', {key} acc====', acc)
+
+wandb.init(project=args.wandb_project, name=args.wandb_project + str(args.ckpt_step), reinit=True)
+log_dict = {f"{task}": acc for task, acc in acc_dict.items()}
+wandb.log({**log_dict, "ck_pt": args.ckpt_step})
+
+if args.input_file:
+    output_dir = os.path.dirname(args.input_file)
+    if os.path.isdir(output_dir):
+        print(f"Removing directory: {output_dir}")
+        shutil.rmtree(output_dir)
