@@ -1,3 +1,13 @@
+#!/usr/bin/bash
+
+#SBATCH -J PiSSA_16_128
+#SBATCH --gres=gpu:4
+#SBATCH --cpus-per-gpu=4
+#SBATCH --mem-per-gpu=24G
+#SBATCH -p A6000
+#SBATCH -t 3-0
+#SBATCH -o /home/lyunm1206/PiSSA/test1.out
+
 BASE_MODEL="meta-llama/Llama-2-7b-hf"
 RES_MODEL="output/PiSSA-Llama-rank128"
 DATA_PATH="pissa-dataset"
@@ -12,41 +22,42 @@ else
 fi
 
 
-for GAS in 1
+for GAS in 16 8 2 1
 do
-    TOTAL_BS=$((2 * GAS * 4))
-    OUTPUT_PATH="output/PiSSA_script_bs${TOTAL_BS}"
+    for lr in 1e-3 3e-4 5e-5 2e-5 5e-6 1e-6
+    do
+        TOTAL_BS=$((2 * GAS * 4))
+        OUTPUT_PATH="output/PiSSA_script_bs${TOTAL_BS}"
 
-    # batch size = per_device_train_batch_size * gradient_accumulation_steps * num_gpus = 128
-    deepspeed --master_port=16971 --include=localhost:4,5,6,7 train_wandb.py \
-        --deepspeed configs/ds_config_zero2_no_offload.json \
-        --model_name_or_path $RES_MODEL \
-        --full_finetune False \
-        --bf16 \
-        --adapter_name_or_path "pissa_init" \
-        --data_path $DATA_PATH \
-        --sub_task metamath:100000 \
-        --dataset_split train \
-        --dataset_field instruction output \
-        --output_dir $OUTPUT_PATH \
-        --num_train_epochs 1 \
-        --model_max_length 512 \
-        --per_device_train_batch_size 2 \
-        --gradient_accumulation_steps $GAS \
-        --save_strategy "steps" \
-        --save_steps 10000000 \
-        --save_total_limit 1 \
-        --learning_rate 2e-5 \
-        --weight_decay 0. \
-        --warmup_ratio 0.03 \
-        --logging_steps 1 \
-        --lr_scheduler_type "cosine" \
-        --report_to "tensorboard" \
-        --merge True \
+        # batch size = per_device_train_batch_size * gradient_accumulation_steps * num_gpus = 128
+        deepspeed --master_port=16971 --include=localhost:0,1,2,3 train_wandb.py \
+            --deepspeed configs/ds_config_zero2_no_offload.json \
+            --model_name_or_path $RES_MODEL \
+            --full_finetune False \
+            --bf16 \
+            --adapter_name_or_path "pissa_init" \
+            --data_path $DATA_PATH \
+            --sub_task metamath:100000 \
+            --dataset_split train \
+            --dataset_field instruction output \
+            --output_dir $OUTPUT_PATH \
+            --num_train_epochs 1 \
+            --model_max_length 512 \
+            --per_device_train_batch_size 4 \
+            --gradient_accumulation_steps $GAS \
+            --save_strategy "steps" \
+            --save_steps 10000000 \
+            --save_total_limit 1 \
+            --learning_rate $lr \
+            --weight_decay 0. \
+            --warmup_ratio 0.03 \
+            --logging_steps 1 \
+            --lr_scheduler_type "cosine" \
+            --report_to "tensorboard" \
+            --merge True \
+       
+    done
 
 done
 
-# CUDA_VISIBLE_DEVICES=4,5 python utils/test_acc.py \
-#                 --input_file /home/mhlee/PiSSA/output/PiSSA_script_bs128_ckpt1/metamath_response.jsonl \
-#                 --ckpt_step 1 \
-#                 --wandb_project "PiSSA_batch_test"
+exit 0
