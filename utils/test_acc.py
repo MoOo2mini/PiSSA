@@ -253,6 +253,9 @@ parser.add_argument('--input_file', type=str, help="")
 parser.add_argument('--ckpt_step', type=int, required=False, default=None, help="For wandb logging")
 parser.add_argument('--wandb_project', type=str, default=None, help="Wandb project name")
 parser.add_argument('--wandb_runname', type=str, default=None, help="Wandb run name")
+parser.add_argument('--bs', type=int, required=False, default=None, help="For wandb logging")
+parser.add_argument('--lr', type=int, required=False, default=None, help="For wandb logging")
+
 args = parser.parse_args()
 
 results = defaultdict(list)
@@ -281,7 +284,7 @@ for key, value in results.items():
     acc_dict[key] = acc
     print(f'{key} length====', len(value), f', {key} acc====', acc)
 
-wandb.init(project=args.wandb_project, name=args.wandb_project + str(args.ckpt_step), reinit=True)
+wandb.init(project=args.wandb_project, name=f"{args.wandb_project}_bs{args.bs}_lr{args.lr}_ckpt{args.ckpt_step}", reinit=True)
 log_dict = {f"{task}": acc for task, acc in acc_dict.items()}
 wandb.log({**log_dict, "ck_pt": args.ckpt_step})
 
