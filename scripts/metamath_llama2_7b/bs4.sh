@@ -21,31 +21,31 @@ do
         MAX_STEP=$((100000 / TOTAL_BS + 1))
         
         # batch size = per_device_train_batch_size * gradient_accumulation_steps * num_gpus = 128
-        deepspeed --master_port=16971 --include=localhost:4,5 train_wandb.py \
-            --deepspeed configs/ds_config_zero2_no_offload.json \
-            --model_name_or_path $RES_MODEL \
-            --full_finetune False \
-            --bf16 \
-            --adapter_name_or_path "pissa_init" \
-            --data_path $DATA_PATH \
-            --sub_task metamath:100000 \
-            --dataset_split train \
-            --dataset_field instruction output \
-            --output_dir $OUTPUT_PATH \
-            --num_train_epochs 1 \
-            --model_max_length 512 \
-            --per_device_train_batch_size 2 \
-            --gradient_accumulation_steps $GAS \
-            --save_strategy "steps" \
-            --save_steps 10000000 \
-            --save_total_limit 1 \
-            --learning_rate $lr \
-            --weight_decay 0. \
-            --warmup_ratio 0.03 \
-            --logging_steps 1 \
-            --lr_scheduler_type "cosine" \
-            --report_to "tensorboard" \
-            --merge True \
+        # deepspeed --master_port=16971 --include=localhost:4,5 train_wandb.py \
+        #     --deepspeed configs/ds_config_zero2_no_offload.json \
+        #     --model_name_or_path $RES_MODEL \
+        #     --full_finetune False \
+        #     --bf16 \
+        #     --adapter_name_or_path "pissa_init" \
+        #     --data_path $DATA_PATH \
+        #     --sub_task metamath:100000 \
+        #     --dataset_split train \
+        #     --dataset_field instruction output \
+        #     --output_dir $OUTPUT_PATH \
+        #     --num_train_epochs 1 \
+        #     --model_max_length 512 \
+        #     --per_device_train_batch_size 2 \
+        #     --gradient_accumulation_steps $GAS \
+        #     --save_strategy "steps" \
+        #     --save_steps 10000000 \
+        #     --save_total_limit 1 \
+        #     --learning_rate $lr \
+        #     --weight_decay 0. \
+        #     --warmup_ratio 0.03 \
+        #     --logging_steps 1 \
+        #     --lr_scheduler_type "cosine" \
+        #     --report_to "tensorboard" \
+        #     --merge True \
 
             for i in $(seq 1 1 29)
             do
@@ -69,6 +69,8 @@ do
                         --input_file $OUTPUT_PATH_MER/metamath_response.jsonl \
                         --ckpt_step $i \
                         --wandb_project "PiSSA_batch_test" \
+                        --bs $TOTAL_BS \
+                        --lr $lr
 
                 fi
             done
@@ -94,6 +96,8 @@ do
                         --input_file $OUTPUT_PATH_MER/metamath_response.jsonl \
                         --ckpt_step $i \
                         --wandb_project "PiSSA_batch_test" \
+                        --bs $TOTAL_BS \
+                        --lr $lr
 
                 fi
             done
@@ -119,6 +123,8 @@ do
                         --input_file $OUTPUT_PATH_MER/metamath_response.jsonl \
                         --ckpt_step $i \
                         --wandb_project "PiSSA_batch_test" \
+                        --bs $TOTAL_BS \
+                        --lr $lr
 
                 fi
             done
@@ -144,6 +150,8 @@ do
                         --input_file $OUTPUT_PATH_MER/metamath_response.jsonl \
                         --ckpt_step $i \
                         --wandb_project "PiSSA_batch_test" \
+                        --bs $TOTAL_BS \
+                        --lr $lr
 
                 fi
             done
