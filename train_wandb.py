@@ -246,7 +246,7 @@ def train():
         run = wandb.init(
             entity = "minhee020-postech",
             project="PiSSA_train",
-            name = "PiSSA_training_rank128_batch=" + str(4 * 2 * script_args.gradient_accumulation_steps)
+            name = f"PiSSA_training_rank128_batch={(2 * 2 * script_args.gradient_accumulation_steps)}_lr{script_args.learning_rate}"
         )
     
     resume_from_checkpoint_dir = get_last_checkpoint(script_args.output_dir)
